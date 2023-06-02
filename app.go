@@ -3,24 +3,25 @@ package main
 import (
 	"net/http"
 	"log"
-	"bufio"
 )
 
 func main(){
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("/siphook", sipHook)
+	mux.HandleFunc("/", indexPageHandler)
 
-	http.ListenAndServe("80", mux)
+	http.ListenAndServe("0.0.0.0:80", mux)
+}
+
+func indexPageHandler(w http.ResponseWriter , r *http.Request) {
+	w.WriteHeader(http.StatusNotFound)
 }
 
 func sipHook(w http.ResponseWriter, r *http.Request) {
-	var bodyString []byte
+	w.WriteHeader(http.StatusOK)
 
-	_, err := r.Body.Read([]byte(bodyString))
-	if err != nil {
-		log.Printf("Error reading body: %v", err)
-	}
+	remote := r.URL.Query().Get("remote")
 
-	log.Println(string(bodyString))
+	log.Println("- Incoming call, number: ", remote)
 }
