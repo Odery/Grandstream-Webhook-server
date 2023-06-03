@@ -43,3 +43,16 @@ func sipHook(w http.ResponseWriter, r *http.Request) {
 	// This information can be useful for debugging and monitoring purposes.
 	log.Println("- Incoming call, number: ", remote)
 }
+
+type teleBot struct {
+	token string
+}
+
+//TODO: implement
+func (bot *teleBot)sendMsg(msg string) error{
+	return nil
+}
+
+func init(){
+	// TODO initialize telebot with token
+}
