@@ -1,9 +1,16 @@
 package main
 
 import (
+	"log"      // This package implements a simple logging package.
 	"net/http" // This package provides HTTP client and server implementations.
-	"log"       // This package implements a simple logging package.
+	"os"
+	"fmt"
+	"strconv"
+	"time"
+	tele "gopkg.in/telebot.v3" // Telegram bot API implementation
 )
+
+var telegramBot *TeleBot
 
 // The main function is the entry point of the program.
 func main(){
@@ -41,18 +48,44 @@ func sipHook(w http.ResponseWriter, r *http.Request) {
 
 	// Log the incoming call number.
 	// This information can be useful for debugging and monitoring purposes.
-	log.Println("- Incoming call, number: ", remote)
+	msg := fmt.Sprintf("- Incoming call, number: %v", remote)
+	log.Println(msg)
+
+	//Send the incoming call to the admin user in telegram
+	telegramBot.sendMsg(msg)
 }
 
-type teleBot struct {
-	token string
+type TeleBot struct {
+	Bot *tele.Bot
+	User *tele.User
 }
 
-//TODO: implement
-func (bot *teleBot)sendMsg(msg string) error{
+//Sends message to the designated bot admin user
+func (t *TeleBot)sendMsg(msg string) error{
+	// Send a message to the user
+	_, err := t.Bot.Send(t.User, msg)
+	if err != nil {
+		return err
+	}
 	return nil
 }
 
 func init(){
-	// TODO initialize telebot with token
+	pref := tele.Settings{
+		Token: os.Getenv("TELEBOT_TOKEN"),
+		Poller: &tele.LongPoller{Timeout: 10 * time.Second},
+	}
+	b, err := tele.NewBot(pref)
+	if err != nil{
+		log.Fatal(err)
+	}
+	userID, err := strconv.Atoi(os.Getenv("TELEBOT_USER"))
+	if err != nil{
+		log.Fatal(err)
+	}
+	
+	telegramBot = &TeleBot{
+		Bot: b,
+		User: &tele.User{ID: int64(userID)} ,
+	}
 }
