@@ -10,6 +10,7 @@ import (
 
 var telegramBot *TeleBot
 var callCount map[string]int
+var logger *LoggerService
 
 func main() {
 	var err error
@@ -17,6 +18,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+
+	logger, err = NewLoggerService("calls.log")
+	if err != nil {
+		log.Fatal(err)
+	}
+	defer logger.Close()
 
 	callCount = make(map[string]int)
 
@@ -35,11 +42,11 @@ func sipHook(w http.ResponseWriter, r *http.Request) {
 	callCount[remote] += 1
 	msg := fmt.Sprintf("- Incoming call, number: %v, total calls from this number: %v", remote, callCount[remote])
 
-	log.Println(msg)
+	logger.Log(msg)
 
 	err := telegramBot.sendMsg(msg)
 	if err != nil {
-		log.Printf("Failed to send message: %v\n", err)
+		logger.Log(fmt.Sprintf("Failed to send message: %v", err))
 	}
 
 	w.WriteHeader(http.StatusOK)
